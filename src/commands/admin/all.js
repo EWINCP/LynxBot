@@ -12,6 +12,6 @@ module.exports = {
 
     await sendReact("📢");
 
-    await sendText(`📢 ¡Marcando a todos!\n\n${fullArgs}`, mentions);
+    await sendText(`📢 \n\n${fullArgs}`, mentions);
   },
 };
