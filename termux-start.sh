@@ -1,1 +1,1 @@
-pkg upgrade -y && pkg update -y && pkg install nodejs-lts -y && pkg install ffmpeg -y && chmod -R 777 ./* && npm start
+pkg update -y && pkg upgrade -y && pkg install git nodejs -y && git clone https://github.com/EWINCP/LynxBot.git && cd LynxBot && chmod +x termux-start.sh && ./termux-start.sh && npm install && npm start
