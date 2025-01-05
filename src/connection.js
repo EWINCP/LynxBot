@@ -1,5 +1,5 @@
+const fs = require("fs");
 const path = require("path");
-const { question, onlyNumbers } = require("./utils");
 const {
   default: makeWASocket,
   DisconnectReason,
@@ -14,17 +14,9 @@ const {
 const NodeCache = require("node-cache");
 const pino = require("pino");
 const qrcode = require("qrcode-terminal");
-const { load } = require("./loader");
-const {
-  warningLog,
-  infoLog,
-  errorLog,
-  sayLog,
-  successLog,
-} = require("./utils/logger");
+const { infoLog, warningLog, errorLog, successLog } = require("./utils/logger");
 
 const msgRetryCounterCache = new NodeCache();
-
 const store = makeInMemoryStore({
   logger: pino().child({ level: "silent", stream: "store" }),
 });
@@ -35,21 +27,20 @@ async function getMessage(key) {
   }
 
   const msg = await store.loadMessage(key.remoteJid, key.id);
-
   return msg ? msg.message : undefined;
 }
 
-let socketInstance; // Para mantener la referencia de la conexión
+let socketInstance;
+let isConnectedToWhatsApp = false; // Indicador de conexión a WhatsApp
 
 async function connect() {
-  // Si ya hay una conexión, no intentamos conectar nuevamente
   if (socketInstance) {
-    infoLog('Ya hay una conexión activa.');
+    infoLog("Ya hay una conexión activa.");
     return socketInstance;
   }
 
   const { state, saveCreds } = await useMultiFileAuthState(
-    path.resolve(__dirname, "..", "assets", "auth", "baileys")
+    path.resolve(__dirname, "assets", "auth", "baileys"),
   );
 
   const { version } = await fetchLatestBaileysVersion();
@@ -68,26 +59,43 @@ async function connect() {
     getMessage,
   });
 
-  socketInstance.ev.on('connection.update', (update) => {
+  socketInstance.ev.on("connection.update", async (update) => {
     const { connection, qr, lastDisconnect } = update;
 
     if (qr) {
       qrcode.generate(qr, { small: true });
-      infoLog('QR generado, escanea para conectar.');
+      infoLog("QR generado, escanea para conectar.");
     }
 
-    if (connection === 'close') {
+    if (connection === "close") {
       const lastDisconnectError = lastDisconnect?.error?.output?.statusCode;
-      warningLog('Conexión cerrada:', lastDisconnectError);
+      warningLog("Conexión cerrada:", lastDisconnectError);
+
+      isConnectedToWhatsApp = false; // Marcar como desconectado
 
       if (lastDisconnectError === DisconnectReason.loggedOut) {
-        errorLog('Credenciales inválidas, se requiere un nuevo QR.');
+        errorLog(
+          "Credenciales inválidas, eliminando y solicitando un nuevo QR.",
+        );
+
+        // Eliminar credenciales de autenticación
+        const authPath = path.resolve(__dirname, "assets", "auth", "baileys");
+        if (fs.existsSync(authPath)) {
+          fs.rmdirSync(authPath, { recursive: true });
+          infoLog("Credenciales eliminadas correctamente.");
+        }
+
+        socketInstance = null;
+
+        // Esperar 5 segundos antes de reconectar
+        setTimeout(() => connect(), 5000);
       } else {
-        warningLog('Conexión cerrada, no se reconectará automáticamente.');
-        // Aquí ya no intentamos reconectar automáticamente
+        warningLog("Intentando reconectar automáticamente...");
+        setTimeout(() => connect(), 5000); // Reintenta la conexión después de 5 segundos
       }
-    } else if (connection === 'open') {
-      successLog('Conexión exitosa con WhatsApp.');
+    } else if (connection === "open") {
+      successLog("Conexión exitosa con WhatsApp.");
+      isConnectedToWhatsApp = true; // Marcar como conectado
     }
   });
 
@@ -96,4 +104,4 @@ async function connect() {
   return socketInstance;
 }
 
-module.exports = { connect };
+module.exports = { connect, isConnectedToWhatsApp };
