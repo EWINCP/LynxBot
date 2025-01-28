@@ -1,8 +1,4 @@
-const { getProfileImageData } = require("../services/baileys");
-const fs = require("fs");
-const { onlyNumbers } = require("../utils");
-const { isActiveWelcomeGroup } = require("../utils/database");
-const { warningLog } = require("../utils/logger");
+const { isActiveGroup } = require("../utils/database"); // Ajusta la ruta según tu estructura
 
 exports.onGroupParticipantsUpdate = async ({
   groupParticipantsUpdate,
@@ -11,30 +7,10 @@ exports.onGroupParticipantsUpdate = async ({
   const remoteJid = groupParticipantsUpdate.id;
   const userJid = groupParticipantsUpdate.participants[0];
 
-  if (!isActiveWelcomeGroup(remoteJid)) {
+  // Eliminar lógica de bienvenida
+  if (!isActiveGroup(remoteJid)) {
     return;
   }
 
-  if (groupParticipantsUpdate.action === "add") {
-    try {
-      const { buffer, profileImage } = await getProfileImageData(
-        socket,
-        userJid
-      );
-
-      await socket.sendMessage(remoteJid, {
-        image: buffer,
-        caption: `¡Bienvenido a nuestro grupo, @${onlyNumbers(userJid)}!`,
-        mentions: [userJid],
-      });
-
-      if (!profileImage.includes("default-user")) {
-        fs.unlinkSync(profileImage);
-      }
-    } catch (error) {
-      warningLog(
-        "¡Alguien entró al grupo y no pude enviar el mensaje de bienvenida!"
-      );
-    }
-  }
+  // Aquí puedes agregar cualquier otra funcionalidad que necesites
 };
