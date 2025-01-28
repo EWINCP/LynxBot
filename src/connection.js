@@ -15,6 +15,7 @@ const NodeCache = require("node-cache");
 const pino = require("pino");
 const qrcode = require("qrcode-terminal");
 const { infoLog, warningLog, errorLog, successLog } = require("./utils/logger");
+const { load } = require("./loader"); // Asegúrate de importar la función load
 
 const msgRetryCounterCache = new NodeCache();
 const store = makeInMemoryStore({
@@ -34,7 +35,7 @@ let socketInstance;
 let isConnectedToWhatsApp = false; // Indicador de conexión a WhatsApp
 
 async function connect() {
-  if (socketInstance) {
+  if (socketInstance && isConnectedToWhatsApp) {
     infoLog("Ya hay una conexión activa.");
     return socketInstance;
   }
@@ -59,6 +60,7 @@ async function connect() {
     getMessage,
   });
 
+  // Suscribir los eventos después de la reconexión
   socketInstance.ev.on("connection.update", async (update) => {
     const { connection, qr, lastDisconnect } = update;
 
@@ -96,6 +98,9 @@ async function connect() {
     } else if (connection === "open") {
       successLog("Conexión exitosa con WhatsApp.");
       isConnectedToWhatsApp = true; // Marcar como conectado
+
+      // Suscribir eventos después de la reconexión
+      load(socketInstance); // Asegúrate de que los eventos se suscriban después de la reconexión
     }
   });
 
@@ -105,3 +110,4 @@ async function connect() {
 }
 
 module.exports = { connect, isConnectedToWhatsApp };
+
