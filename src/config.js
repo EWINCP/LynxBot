@@ -25,14 +25,14 @@ exports.ASSETS_DIR = path.resolve(__dirname, "..", "assets");
 exports.TEMP_DIR = path.resolve(__dirname, "..", "assets", "temp");
 
 // Tiempo de espera en milisegundos por evento (evita bloqueos).
-exports.TIMEOUT_IN_MILLISECONDS_BY_EVENT = 700;
+exports.TIMEOUT_IN_MILLISECONDS_BY_EVENT = 2000; // Definimos el tiempo de espera en milisegundos (2 segundo)
 
 // Plataforma de API's.
-exports.SPIDER_API_BASE_URL="https://api.spiderx.com.br/api";
+exports.SPIDER_API_BASE_URL = "https://api.spiderx.com.br/api";
 
 // Obtén tu token creando una cuenta en: https://api.spiderx.com.br.
-exports.SPIDER_API_TOKEN="NErZKUk2KYeSa4snQcWl";
-exports.API_KEY_DE_YOUTUBE="AIzaSyCjCh22nL8r8Weh20_qShsBVvv4cFDmhXE";
+exports.SPIDER_API_TOKEN = "NErZKUk2KYeSa4snQcWl";
+exports.API_KEY_DE_YOUTUBE = "AIzaSyCjCh22nL8r8Weh20_qShsBVvv4cFDmhXE";
 
 // Si deseas responder solo a un grupo específico, coloca el ID aquí (ejemplo: 120363023799506419@g.us). Solo para pruebas internas.
 exports.ONLY_GROUP_ID = "";
